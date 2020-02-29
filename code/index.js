@@ -1,24 +1,44 @@
-const { PathFactory } = require('ldflex');
-const { default: ComunicaEngine } = require('ldflex-comunica');
-const { namedNode } = require('@rdfjs/data-model');
+const rdf = require('rdflib')
+const ns = require('solid-namespace')(rdf)
+const store = rdf.graph()
 
-// The JSON-LD context for resolving properties
-const context = {
-  "@context": {
-    "@vocab": "http://schema.org/Organization"
-  }
-};
-// The query engine and its source
-const queryEngine = new ComunicaEngine('http://reference.data.gov.uk/id/department/co');
-// The object that can create new paths
-const path = new PathFactory({ context, queryEngine });
+const me = store.sym('https://alvarezgarciamarcos.solid.community/profile/card#me')
+const cesar = store.sym('https://themrcesi.inrupt.net/profile/card#me')
+const profile = me.doc()
 
-const organization = path.create({ subject: namedNode('http://schema.org/Organization') });
-showPerson(organization);
+const fetcher = new rdf.Fetcher(store)
+  
+/* 
+fetcher.load(profile)
+  .then(response => {
+    let name = store.any(me, ns.foaf('knows'))
+    console.log(name)
+  })
+ */
 
-async function showPerson(organization) {
-  console.log(`This organization is ${ await organization.email}`);
-
-    
-   
+getValueFromNamespace = (profile, field, ns) => {
+  return new Promise((resolve, reject) => {
+    fetcher.load(profile.doc())
+      .then(response => {
+        resolve(store.any(profile, ns(field)))
+      })
+      .catch(error => reject(error))
+  })
 }
+
+getValueFromVcard = (profile, field) => getValueFromNamespace(profile, field, ns.vcard)
+getValueFromFoaf = (profile, field) => getValueFromNamespace(profile, field, ns.foaf)
+
+
+getInfoFromProfile = (profile, callback) => {
+  const name = getValueFromVcard(profile, 'fn')
+  const friends = getValueFromFoaf(profile, 'knows')
+  const image = getValueFromVcard(profile, 'hasPhoto')
+
+  Promise.all([name, friends, image])
+    .then(values => {
+      callback(values)
+    })
+}
+
+getInfoFromProfile(cesar, (v) => console.log(v))
