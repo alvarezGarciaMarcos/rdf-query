@@ -107,16 +107,14 @@ const getInfoFromProfile = async (profile, callback) => {
     })
 }
 
-module.exports = {
-  getSingleValueFromFoaf,
-  getMultipleValuesFromFoaf,
-  getSingleValueFromNamespace,
-  getMultipleValuesFromNamespace,
-  getInfoFromProfile,
-  getName,
-  getFriends,
-  getImage
-}
-
+exports.getName = getName
+exports.getFriends = getFriends
+exports.getImage = getImage
+exports.getInfoFromProfile = getInfoFromProfile
+exports.getMultipleValuesFromFoaf = getMultipleValuesFromFoaf
+exports.getSingleValueFromFoaf = getSingleValueFromFoaf
+exports.getSingleValueFromVcard = getSingleValueFromVcard
+exports.getMultipleValuesFromNamespace = getMultipleValuesFromNamespace
+exports.getSingleValueFromNamespace = getSingleValueFromNamespace
 
 
