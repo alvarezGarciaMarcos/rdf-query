@@ -2,43 +2,121 @@ const rdf = require('rdflib')
 const ns = require('solid-namespace')(rdf)
 const store = rdf.graph()
 
-const me = store.sym('https://alvarezgarciamarcos.solid.community/profile/card#me')
-const cesar = store.sym('https://themrcesi.inrupt.net/profile/card#me')
-const profile = me.doc()
-
 const fetcher = new rdf.Fetcher(store)
-  
-/* 
-fetcher.load(profile)
-  .then(response => {
-    let name = store.any(me, ns.foaf('knows'))
-    console.log(name)
-  })
- */
 
-getValueFromNamespace = (profile, field, ns) => {
+/**
+ * Method that queries a profile for a specific field in an specific nameSpace
+ * @param profile the URI to the profile
+ * @param field the field to look for. Ex: 'fn'
+ * @param ns the namespace to look in.
+ */
+getSingleValueFromNamespace = (profile, field, ns) => {
+  let _profile = store.sym(profile)
   return new Promise((resolve, reject) => {
-    fetcher.load(profile.doc())
-      .then(response => {
-        resolve(store.any(profile, ns(field)))
+    fetcher.load(_profile.doc())
+      .then(() => {
+        resolve(store.any(_profile, ns(field)))
       })
       .catch(error => reject(error))
   })
 }
 
-getValueFromVcard = (profile, field) => getValueFromNamespace(profile, field, ns.vcard)
-getValueFromFoaf = (profile, field) => getValueFromNamespace(profile, field, ns.foaf)
+/**
+ * Method that queries a profile for a specific field (that has multiple values as a response)
+ * in an specific nameSpace
+ * @param profile the URI to the profile
+ * @param field the field to look for. Ex: 'fn'
+ * @param ns the namespace to look in.
+ */
+getMultipleValuesFromNamespace = (profile, field, ns) => {
+  let _profile = store.sym(profile)
+  return new Promise((resolve, reject) => {
+    fetcher.load(_profile.doc())
+      .then(() => {
+        resolve(store.statementsMatching(_profile, ns(field)))
+      })
+      .catch(error => reject(error))
+  })
+}
+
+/**
+ * Returns single value properties from VCARD NameSpace
+ * @param profile the profile to look into 
+ * @param  field the field to look for
+ */
+const getSingleValueFromVcard = (profile, field) => getSingleValueFromNamespace(profile, field, ns.vcard)
 
 
-getInfoFromProfile = (profile, callback) => {
-  const name = getValueFromVcard(profile, 'fn')
-  const friends = getValueFromFoaf(profile, 'knows')
-  const image = getValueFromVcard(profile, 'hasPhoto')
+/**
+ * Returns single value properties from FOAF NameSpace
+ * @param profile the profile to look into 
+ * @param  field the field to look for
+ */
+const getSingleValueFromFoaf = (profile, field) => getSingleValueFromNamespace(profile, field, ns.foaf)
+
+
+/**
+ * Returns multiple value properties from FOAF NameSpace
+ * @param profile the profile to look into 
+ * @param field the field to look for
+ */
+const getMultipleValuesFromFoaf = (profile, field) => getMultipleValuesFromNamespace(profile, field, ns.foaf)
+
+/**
+ * Returns the name of an specific profile
+ * @param profile the profile to look into 
+ */
+const getName = profile => getSingleValueFromVcard(profile, 'fn')
+
+
+/**
+ * Returns the image 
+ * @param profile the profile to look into 
+ */
+const getImage = profile => getSingleValueFromVcard(profile, 'hasPhoto')
+
+
+/**
+ * Returns all the friends 
+ * @param profile the profile to look into 
+ */
+const getFriends = profile => getMultipleValuesFromFoaf(profile, 'knows')
+
+/**
+ * Returns the name, image, and friends of a profile
+ * @param profile the URI of a profile
+ * @param callback the callback function
+ */
+const getInfoFromProfile = async (profile, callback) => {
+  const name = getName(profile)
+  const friends = getFriends(profile, 'knows')
+  const image = getImage(profile, 'hasPhoto')
 
   Promise.all([name, friends, image])
     .then(values => {
-      callback(values)
+      let friends = []
+      values[1].forEach(friend => {
+        friends.push(friend.object.uri)
+      })
+      let profile = {
+        name: values[0].value,
+        friends: friends,
+        image: values[2].value
+      }
+      callback(profile)
     })
 }
 
-getInfoFromProfile(cesar, (v) => console.log(v))
+module.exports = {
+  getSingleValueFromFoaf,
+  getMultipleValuesFromFoaf,
+  getSingleValueFromNamespace,
+  getMultipleValuesFromNamespace,
+  getInfoFromProfile,
+  getName,
+  getFriends,
+  getImage
+}
+
+
+
