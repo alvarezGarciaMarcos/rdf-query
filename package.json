@@ -1,6 +1,6 @@
 {
   "name": "rdf-query",
-  "version": "0.0.3",
+  "version": "1.0.0",
   "description": "A module to interact with solid apps",
   "main": "index.js",
   "scripts": {
@@ -11,5 +11,9 @@
   "dependencies": {
     "rdflib": "^1.0.6",
     "solid-namespace": "^0.3.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alvarezGarciaMarcos/rdf-query"
   }
 }
