@@ -9,7 +9,7 @@
   "author": "Marcos Álvarez García",
   "license": "ISC",
   "dependencies": {
-    "rdflib": "^1.0.6",
+    "rdflib": "^2.2.20",
     "solid-namespace": "^0.3.0"
   },
   "repository": {
